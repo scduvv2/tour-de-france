@@ -14,15 +14,29 @@ def open_file(in_file):
     cityList = []
 
     with open(in_file, 'r') as words:
+        citiesStart=False
+        roadsStart=False
         for line in words:
-            if line.startswith('%'):
+            if line.__eq__('%========================== Cities (name, latitude, longitude) ========================\n'):
+                citiesStart=True
                 continue
+            if citiesStart and line != "\n":
+                if line.__eq__("%====================================== Roads ========================================\n"):
+                    citiesStart=False
+                    roadsStart=True
+                    continue  
+                else:
+                    mystring = line
+                    myString = re.sub(r"[\n\t\s]*", "", mystring)
+                    cityList.append(myString.strip().split(','))  
+            if roadsStart==True and line != "\n":
+                mystring = line
+                myString = re.sub(r"[\n\t\s]*", "", mystring)
+                roadsList.append(myString.strip().split(','))
+                
+           
             
-            mystring = line
-            myString = re.sub(r"[\n\t\s]*", "", mystring)
-            roadsList.append(myString.strip().split(','))
-            
-    return roadsList
+    return roadsList,cityList
 
 
 def create_tree(node_list):
@@ -143,7 +157,7 @@ if __name__ == "__main__":
     GoalCity = sys.argv[3]
     type_of_search = "dfs"
 
-    road_list = open_file(in_file)
+    road_list,city_list = open_file(in_file)
     G = create_tree(road_list)
    
     print("Starting Node: " + StartCity)
