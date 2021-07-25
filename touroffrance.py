@@ -40,7 +40,7 @@ def get_children(G, the_node):
 
 if __name__ == "__main__":
     
-    in_file = "./frenchcities.txt"
+    in_file = "./uscities.txt"
 
     StartCity = "Nantes"
     

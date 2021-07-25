@@ -13,6 +13,9 @@ def open_file(in_file):
 
     with open(in_file, 'r') as words:
         for line in words:
+            if line.startswith('%'):
+                continue
+            
             mystring = line
             myString = re.sub(r"[\n\t\s]*", "", mystring)
             roadsList.append(myString.strip().split(','))
