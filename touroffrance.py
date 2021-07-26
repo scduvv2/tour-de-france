@@ -26,6 +26,7 @@ def create_tree(node_list):
     G = nx.from_pandas_edgelist(df, 'City1', 'City2')
     G = nx.from_pandas_edgelist(df, 'City1', 'City2', edge_attr='KM')
     
+    
     return G
 
 

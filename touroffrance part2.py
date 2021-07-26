@@ -114,7 +114,7 @@ class Search(Node):
                 print(self.return_path)
                 break
          
-            if n in self.visited:
+            if n in self.visited and n not in self.return_path:
                 self.return_path.insert(0, n)
                 self.find_path(n)
                 if self.return_path[0] == self.visited[0]:
