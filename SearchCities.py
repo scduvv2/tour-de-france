@@ -156,7 +156,46 @@ class Search(Node):
               
                 for order_city in ordered_weighted_cities:    
                     self.weightedQueue.append(order_city)
-                  
+               
+    def ucs(self, node, goalCity, G,cityList,roadList):
+        for city in cityList:
+            city_heuristic = self.calculate_heuristic(str(goalCity),city,cityList)
+            self.heuristic_map[city] =city_heuristic
+        weighted_city={'city':node,"total_distance":0,"weighted_cost_to_reach_neighbor":0}
+        self.weightedQueue.append(weighted_city)
+
+        while self.weightedQueue:
+            city_to_expand = self.weightedQueue.pop(-1)
+            visited_city = str(city_to_expand['city'])
+            self.visited.append(visited_city)
+            neighbors_list = self.getNeighbor(city_to_expand['city'])
+            if (city_to_expand['city'] == goalCity):
+                        print("These are visited nodes\n >>>", self.visited, "\n")
+                        print("total distance",goalCity)
+                        print("Found:", goalCity,"")
+                        self.return_path.append(goalCity)
+                        self.find_path(goalCity)
+                        break
+            else:
+                neighbor_with_least_weight=''
+                least_weighted_cost_to_reach_neighbor=-1
+                least_weighted_neighbor_distance = 0
+                weighted_cities=[]
+                for neighbor in neighbors_list:
+                    if neighbor not in self.visited:
+                     
+                     
+                        neighbor_heuristic = self.heuristic_map[neighbor]
+                        distance_from_parent_to_neighbor =float( self.find_distance_between_cities(neighbor,city_to_expand['city'],roadList))
+                    
+                        weighted_city={'city':neighbor,"total_distance": city_to_expand['total_distance']+distance_from_parent_to_neighbor,"weighted_cost_to_reach_neighbor":city_to_expand['total_distance'] + distance_from_parent_to_neighbor + neighbor_heuristic,"neighbor_heuristic":neighbor_heuristic,"distance_from_parent_to_neighbor":distance_from_parent_to_neighbor}  
+                        weighted_cities.append(weighted_city)
+                        # only the edge cost. no heuristic
+                ordered_weighted_cities = sorted(weighted_cities, key=lambda i:float(i['total_distance']),reverse=True)
+              
+                for order_city in ordered_weighted_cities:    
+                    self.weightedQueue.append(order_city)
+                                 
 #[‘phoenix’, ‘tucson’, ‘elPaso’, ‘santaFe’, ‘denver’, ‘wichita’, ‘omaha’, ‘desMoines’, ‘minneapolis’, ‘chicago’]
     def find_distance_between_cities(self,city1,city2,roads_list):
         for road in road_list:
@@ -211,7 +250,10 @@ def callingSearch(startCity, goalCity, typeOfSearch, G,cityList,roadList):
     elif typeOfSearch=='dfs':
         g.dfs(startCity, goalCity, G)    
     elif typeOfSearch=='A*':
-        g.a_star(startCity, goalCity, G,cityList,roadList)        
+        g.a_star(startCity, goalCity, G,cityList,roadList)    
+    elif typeOfSearch=='ucs':
+        g.ucs(startCity, goalCity, G,cityList,roadList)    
+            
         
 ## else if type of search = dfs 
 
@@ -222,7 +264,7 @@ if __name__ == "__main__":
 
     StartCity = sys.argv[2]
     GoalCity = sys.argv[3]
-    type_of_search = "A*"
+
 
     road_list,city_list = open_file(in_file)
     G = create_tree(road_list,city_list)
@@ -231,7 +273,9 @@ if __name__ == "__main__":
    # plt.show()
    
     print("Starting Node: " + StartCity)
-    callingSearch(StartCity, GoalCity, type_of_search, G,city_list,road_list)
+   # callingSearch(StartCity, GoalCity, 'bfs', G,city_list,road_list)
+    callingSearch(StartCity, GoalCity, 'ucs', G,city_list,road_list)
+  #  callingSearch(StartCity, GoalCity, 'A*', G,city_list,road_list)
     
     
     
