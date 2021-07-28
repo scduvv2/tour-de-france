@@ -61,7 +61,8 @@ class Search(Node):
     def __init__(self):
         self.visited = []
         self.queue = []
-        self.weightedQueue = {} # may be needed for A*
+        self.weightedQueue = [] # may be needed for A*
+        self.heuristic_map ={}
         self.newNodes = []
         self.neighborL = []
         self.return_path = []
@@ -71,7 +72,7 @@ class Search(Node):
             self.node = str(node)
             self.neighborList = (G.adj[node])
             while self.queue:
-                s = self.queue.pop(-1)
+                s = self.queue.pop(0)
                 nList = self.getNeighbor(s)
                 if (s == goalCity):
                             print("These are visited nodes\n >>>", self.visited, "\n")
@@ -105,35 +106,66 @@ class Search(Node):
                     if neighbor not in self.visited:
                         self.visited.append(neighbor)
                         self.queue.append(neighbor)
-    
-    def a_star(self, node, goalCity, G,cityList):
-        self.visited.append(node)
-        self.queue.append(node)
-        self.node = str(node)
-        self.neighborList = (G.adj[node])
-        while self.queue:
-            s = self.queue.pop(0)
-            node_with_least_heuristic=''
-            least_heuristic = -1
-            nList = self.getNeighbor(s)
-            if (s == goalCity):
-                        print("These are visited nodes\n >>>", self.visited, "\n")
                         
+    def calculate_heuristic(self,destination,node,cityList):
+           
+        
+        lat2 =   float(cityList.get(destination)[0])
+        long2 = float(cityList.get(destination)[1])
+        lat1 = float(cityList.get(node)[0])
+        long1 = float(cityList.get(node)[1])
+        heuristic = math.sqrt((69.5 * (lat1 - lat2)) ** 2 + (69.5 * math.cos((lat1 + lat2)/360 * math.pi) * (long1 - long2)) ** 2)
+        
+        return heuristic
+            
+    
+    def a_star(self, node, goalCity, G,cityList,roadList):
+        for city in cityList:
+            city_heuristic = self.calculate_heuristic(str(goalCity),city,cityList)
+            self.heuristic_map[city] =city_heuristic
+        weighted_city={'city':node,"total_distance":0,"weighted_cost_to_reach_neighbor":0}
+        self.weightedQueue.append(weighted_city)
+
+        while self.weightedQueue:
+            city_to_expand = self.weightedQueue.pop(-1)
+            visited_city = str(city_to_expand['city'])
+            self.visited.append(visited_city)
+            neighbors_list = self.getNeighbor(city_to_expand['city'])
+            if (city_to_expand['city'] == goalCity):
+                        print("These are visited nodes\n >>>", self.visited, "\n")
+                        print("total distance",goalCity)
                         print("Found:", goalCity,"")
                         self.return_path.append(goalCity)
                         self.find_path(goalCity)
                         break
             else:
-               
-                for neighbor in nList:
+                neighbor_with_least_weight=''
+                least_weighted_cost_to_reach_neighbor=-1
+                least_weighted_neighbor_distance = 0
+                weighted_cities=[]
+                for neighbor in neighbors_list:
                     if neighbor not in self.visited:
-                        node_heuristic = self.calculate_heuristic(goalCity,neighbor,cityList)
-                        if node_heuristic< least_heuristic or least_heuristic==-1:
-                            least_heuristic=node_heuristic
-                            node_with_least_heuristic = neighbor
-                if node_with_least_heuristic not in self.visited:
-                    self.visited.append(node_with_least_heuristic)            
-                    self.queue.append(node_with_least_heuristic)
+                     
+                     
+                        neighbor_heuristic = self.heuristic_map[neighbor]
+                        distance_from_parent_to_neighbor =float( self.find_distance_between_cities(neighbor,city_to_expand['city'],roadList))
+                    
+                        weighted_city={'city':neighbor,"total_distance": city_to_expand['total_distance']+distance_from_parent_to_neighbor,"weighted_cost_to_reach_neighbor":city_to_expand['total_distance'] + distance_from_parent_to_neighbor + neighbor_heuristic,"neighbor_heuristic":neighbor_heuristic,"distance_from_parent_to_neighbor":distance_from_parent_to_neighbor}  
+                        weighted_cities.append(weighted_city)
+                ordered_weighted_cities = sorted(weighted_cities, key=lambda i:float(i['weighted_cost_to_reach_neighbor'])+float(i['neighbor_heuristic']),reverse=True)
+              
+                for order_city in ordered_weighted_cities:    
+                    self.weightedQueue.append(order_city)
+                  
+#[‘phoenix’, ‘tucson’, ‘elPaso’, ‘santaFe’, ‘denver’, ‘wichita’, ‘omaha’, ‘desMoines’, ‘minneapolis’, ‘chicago’]
+    def find_distance_between_cities(self,city1,city2,roads_list):
+        for road in road_list:
+            if road[0]==city1 and road[1]==city2:
+                return road[2]
+            elif road[0]==city2 and road[1]==city1:
+                return road[2]
+        
+        return 0    
              
          
                         
@@ -168,25 +200,18 @@ class Search(Node):
                 if self.return_path[0] == self.visited[0]:
                     break
                 
-    def calculate_heuristic(self,destination,node,cityList):
-        lat2 =   float(cityList.get(destination)[0])
-        long2 = float(cityList.get(destination)[1])
-        lat1 = float(cityList.get(node)[0])
-        long1 = float(cityList.get(node)[1])
-        heuristic = math.sqrt((69.5 * (lat1 - lat2)) ** 2 + (69.5 * math.cos((lat1 + lat2)/360 * math.pi) * (long1 - long2)) ** 2)
-        return heuristic
-            
 
 
 
-def callingSearch(startCity, goalCity, typeOfSearch, G,cityList):
+
+def callingSearch(startCity, goalCity, typeOfSearch, G,cityList,roadList):
     g = Search()
     if typeOfSearch == "bfs":
         g.bfs(startCity, goalCity, G)   
     elif typeOfSearch=='dfs':
         g.dfs(startCity, goalCity, G)    
     elif typeOfSearch=='A*':
-        g.a_star(startCity, goalCity, G,cityList)        
+        g.a_star(startCity, goalCity, G,cityList,roadList)        
         
 ## else if type of search = dfs 
 
@@ -206,7 +231,7 @@ if __name__ == "__main__":
    # plt.show()
    
     print("Starting Node: " + StartCity)
-    callingSearch(StartCity, GoalCity, type_of_search, G,city_list)
+    callingSearch(StartCity, GoalCity, type_of_search, G,city_list,road_list)
     
     
     
